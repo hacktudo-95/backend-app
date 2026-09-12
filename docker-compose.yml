@@ -1,0 +1,40 @@
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.37
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_NO_ANALYTICS: "true"
+    ports:
+      - "7700:7700"
+    volumes:
+      - meili_data:/meili_data
+
+  whisper:
+    image: ghcr.io/speaches-ai/speaches:latest-cpu
+    restart: unless-stopped
+    environment:
+      PRELOAD_MODELS: '["Systran/faster-whisper-medium"]'
+      WHISPER__INFERENCE_DEVICE: cpu
+      WHISPER__COMPUTE_TYPE: int8
+    ports:
+      - "8000:8000"
+    volumes:
+      - whisper_models:/home/ubuntu/.cache/huggingface/hub
+
+  kokoro:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    restart: unless-stopped
+    environment:
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "8880:8880"
+
+volumes:
+  meili_data:
+    external: true
+    name: backend-local_meili_data
+  whisper_models:
+    external: true
+    name: backend-local_whisper_models
